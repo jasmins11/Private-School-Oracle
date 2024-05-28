@@ -1,6 +1,6 @@
 # Private School 
 
-The **Private School** project is an information management system designed for a chain of educational institutions, realized in Oracle. It aims to streamline and automate the administrative processes of private schools, enabling efficient management of data on students, teachers, courses, and other resources.
+The **Private School** project is an Oracle-based information management system created for a chain of educational institutions. Its primary goal is to streamline and automate the administrative processes of private schools, allowing for efficient management of data pertaining to students, teachers, courses, and other educational resources.
 
 ## Key Features
 
