@@ -960,9 +960,6 @@ delete from formular;
 select * from formular;
 select * from bursa;
 
---12 a)
---Aceasta subcerere depedenta selecteaza nume, prenumele salariul unui profesor, impreuna cu denumirea departamentului si a scolii la care preda.
---Cu aceasta cere am vrut sa gasesc profesorul care are salariul maxim din fiecare departament pe specializarea fiecaruia, plus scoala la care preda, deoarece mai multe scoli pot avea acelasi departament
 SELECT p.nume_profesor, p.prenume_profesor, p.salariu, d.denumire_departament, sc.denumire_scoala
 FROM Profesor p
 JOIN Specializare s ON s.id_profesor=p.id_profesor
@@ -975,11 +972,7 @@ JOIN Specializare s1 ON p1.id_profesor=s1.id_profesor
 WHERE s1.id_departament=d.id_departament
 );
 
---12 b) f)
--- Aceasta interogatie este formata din:
---1.o cerere nesincronizata, care calculeaza numarul total de burse ale unui elev, grupandu-le dupa id-ul elevilor
---2. dupa aceea calculam minimul dintre numarul de burse folosindu-ne de o subcererea anterioara
---3.partea principala unde dam join la tabele pentru a afisa numele, prenumele(detaliile elevilor), verificam unde numarul de burse coincide cu cel minim(elevii care au nr minim de burse), afisam media si scoala de la care este elevul
+
 WITH Bursa_elev AS(
 SELECT f.id_elev, COUNT(f.id_bursa) AS nr_burse
 FROM Formular f
@@ -996,7 +989,6 @@ JOIN MinBursa minb ON b.nr_burse=minb.min_burse
 JOIN Formular f ON f.id_elev=b.id_elev
 JOIN Scoala sc ON e.id_scoala=sc.id_scoala;
 
---12 c) Numarul minim de elevi din fiecare scoala care participa la cursul de "POO in Java"
 WITH Curs_de_Java AS (
     SELECT c.id_curs
     FROM Curs c
@@ -1020,7 +1012,6 @@ HAVING ej.nr_elevi_java = (
 ORDER BY sc.denumire_scoala;
 
 
---12 d) Aceasta interogatie in SQL modifica valorile de null din bursa cu 0(pentru medie_minima), iar pentru atributul situatieSpeciala va modifica atributele de timp int in varchar (1-DA,0-NU)
 SELECT id_bursa,
 tip,
 suma,
@@ -1029,9 +1020,6 @@ DECODE(situatieSpeciala,0,'Nu',1,'Da','Necunoscut') AS siatuatieSpeciala
 FROM Bursa
 ORDER BY suma;
 
---12 e) Aceasta interogatie va ordona profesorii in functie de experienta unde am calculat experienta ca diferenta de la luna angajarii la luna actuala folosind functia de tip data
---Porecla va fi creata cu ajutorul functiei SUBSTR pentru a lua primele 5 caractere din prenume si le scrie cu litere mari (UPPER)
---De asemenea am creat si o coloana cu data_aniversare la care se adauga 12 luni de la data angajarii.
 
 
 SELECT id_profesor, 
@@ -1049,15 +1037,12 @@ END AS clasificare_experienta
 FROM  Profesor
 ORDER BY experienta;
 
---13.Am actualizat salariul coordonatorilor cu 6 ani de experienta
 
 UPDATE Coordonator
 SET salariu=salariu*1.05
 WHERE ROUND( MONTHS_BETWEEN(SYSDATE, data_angajare_coo),0)>=72;
 
 
---Stergem din tabelul Certificare atestatul pe care il au cei mai putini elevi.
---Mai intai vom ordona crescator coloanele tabelului dupa numarul de elevi care sunt asociati cu un atestat, si vom sterge doar prima linie.
 DELETE FROM Certificare
 WHERE  id_atestat=(
  SELECT  id_atestat FROM (
@@ -1068,13 +1053,11 @@ FETCH FIRST 1 ROW ONLY
  )
 );
 
---Vom actualiza data de inceput si de final a cursurilor fizice
 UPDATE Curs
 SET inceput_curs=inceput_curs +INTERVAL '10' DAY,
 final_curs=final_curs +INTERVAL '10' DAY
 WHERE id_curs IN (3,4,5,7,9);
 
---14. Vom crea un tabel virtual complex care sa prezinte informatii despre cursuri, profesori si numarul de elevi inscrisi la fiecare curs
 
 CREATE VIEW Curs_Prof_Elev AS
 SELECT c.id_curs, c.denumire_curs, p.nume_profesor, p.prenume_profesor, COUNT(i.id_elev) AS numar_elevi
@@ -1090,12 +1073,6 @@ WHERE numar_elevi=3;
 DELETE FROM Curs_Prof_Elev
 WHERE id_curs = 1;
 
---15.a)Vom selecta toate scolile, impreuna cu coordonatorii lor, profesorii si locatiile lor, inclusiv locatiile care nu au scoli asociate.
---Daca o scoala nu are niciun coordonator asociat, coloanele 'id_coordonator', 'prenume_coordonator' vor fi NULL.
---Daca un coordonator nu are niciun profesor asociat, coloanele 'id_profesor', 'prenume_profesor' vor fi NULL.
---Daca o scoala nu are nicio locatie asociata, coloanele 'id_locatie', 'tara_locatie', 'oras_locatie' vor fi NULL.
-
---Folosind FULL OUTER JOIN pentru a include toate inregistrarile din tabelele asociate si pentru a completa cu NULL acolo unde nu exista potriviri intre tabele.
 
 SELECT s.id_scoala,s.denumire_scoala, c.id_coordonator,c.prenume_coordonator,p.id_profesor,p.prenume_profesor,l.id_locatie,l.tara_locatie,l.oras_locatie
 FROM Scoala s
@@ -1103,7 +1080,7 @@ FULL OUTER JOIN Coordonator c ON s.id_scoala=c.id_scoala
 FULL OUTER JOIN Profesor p ON c.id_coordonator=p.id_coordonator
 FULL OUTER JOIN Locatie l ON l.id_scoala=s.id_scoala;
 
---b)Afiseaza elevii care sunt inscrisi la toate cursurile
+
 
 SELECT e.id_elev, e.nume_elev, e.prenume_elev
 FROM Elev e
@@ -1117,11 +1094,6 @@ WHERE NOT EXISTS (
         AND i.id_curs = c.id_curs
     )
 );
-
---c)
---Vom afisa top 3 coordonatori cu salariulcel mai mare
---Utilizand ROW_NUMBER() si ORDER BY c.salariu DESC putem numerota coordonatorii in functie de salariu descrescator
---top<=3 selectam primii 3 coordonatori cu cele mai mari salarii
 
 WITH TopCoo AS(
 SELECT c.id_coordonator, c.nume_coordonator, c.prenume_coordonator, c.salariu, c.id_scoala,
